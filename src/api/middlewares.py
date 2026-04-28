@@ -18,12 +18,12 @@ logger = logging.getLogger("api.request")
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
+        request_id = request.headers.get("request-id", str(uuid.uuid4()))
         token = request_id_ctx.set(request_id)
         request.state.request_id = request_id
         try:
             response = await call_next(request)
-            response.headers["x-request-id"] = request_id
+            response.headers["request-id"] = request_id
             return response
         finally:
             request_id_ctx.reset(token)
@@ -49,10 +49,10 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Type-Options"] = "nosniff"
+        response.headers["Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Protection"] = "1; mode=block"
         response.headers["Content-Security-Policy"] = "default-src 'self'"
         return response
 
