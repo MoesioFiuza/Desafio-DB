@@ -4,8 +4,6 @@ from src.domain.value_objects.coordenada import Coordenada
 
 
 class DistanciaService:
-    """Service de dominio para calculo de distancia entre coordenadas."""
-
     @staticmethod
     def haversine_km(origem: Coordenada, destino: Coordenada) -> float:
         raio_terra_km = 6371.0

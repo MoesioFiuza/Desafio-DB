@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import date
-
 from src.domain.exceptions.domain_errors import DomainValidationError
 from src.domain.value_objects.coordenada import Coordenada
 from src.domain.value_objects.documento_id import DocumentoId

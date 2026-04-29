@@ -1,9 +1,7 @@
 from datetime import date
 from uuid import UUID
-
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
 from src.application.contracts.repositories.documento_repository import DocumentoRepository
 from src.domain.entities.documento import Documento
 from src.domain.value_objects.coordenada import Coordenada

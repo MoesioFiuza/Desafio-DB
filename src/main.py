@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from src.api.controllers.documentos_controller import router as documentos_router
 from src.api.controllers.health_controller import router as health_router
 from src.api.error_handlers import register_exception_handlers

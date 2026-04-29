@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-
 from src.infrastructure.persistence.repositories.documento_repository_sqlalchemy import (
     DocumentoRepositorySqlAlchemy,
 )

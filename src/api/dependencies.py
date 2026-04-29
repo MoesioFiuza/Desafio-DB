@@ -1,6 +1,5 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
-
 from src.application.use_cases.create_document.handler import CreateDocumentHandler
 from src.application.use_cases.search_documents.handler import SearchDocumentsHandler
 from src.infrastructure.persistence.db_context import get_session

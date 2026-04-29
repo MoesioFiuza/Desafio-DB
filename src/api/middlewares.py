@@ -5,11 +5,9 @@ import uuid
 from collections import defaultdict, deque
 from collections.abc import Callable
 from threading import Lock
-
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-
 from src.shared.config import Settings
 from src.shared.request_context import request_id_ctx
 

@@ -14,8 +14,6 @@ def to_document_response_from_domain(documento: Documento) -> DocumentResponse:
         longitude=documento.coordenada.longitude if documento.coordenada else None,
         score=None,
     )
-
-
 def to_document_response_from_read_model(model: DocumentReadModel) -> DocumentResponse:
     return DocumentResponse(
         id=model.id,

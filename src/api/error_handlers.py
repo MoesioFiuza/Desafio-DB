@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-
 from src.domain.exceptions.domain_errors import DomainError
 from src.shared.request_context import request_id_ctx
 
