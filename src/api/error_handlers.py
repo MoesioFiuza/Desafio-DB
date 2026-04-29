@@ -5,8 +5,9 @@ from src.domain.exceptions.domain_errors import DomainError
 from src.shared.request_context import request_id_ctx
 
 
-def _error_payload(code: str, message: str) -> dict[str, str]:
+def _error_payload(code: str, message: str) -> dict[str, object]:
     return {
+        "success": False,
         "code": code,
         "message": message,
         "trace_id": request_id_ctx.get(),
