@@ -1,10 +1,12 @@
 from typing import Annotated
-
 from fastapi import APIRouter, Depends, Query, status
-
 from src.api.dependencies import get_create_document_handler, get_search_documents_handler
 from src.api.dtos.requests import CreateDocumentRequest
 from src.api.dtos.responses import DocumentResponse
+from src.api.mappers.document_mapper import (
+    to_document_response_from_domain,
+    to_document_response_from_read_model,
+)
 from src.application.use_cases.create_document.command import CreateDocumentCommand
 from src.application.use_cases.create_document.handler import CreateDocumentHandler
 from src.application.use_cases.search_documents.handler import SearchDocumentsHandler
@@ -27,7 +29,7 @@ def create_document(
         longitude=request.longitude,
     )
     created = handler.execute(command)
-    return DocumentResponse.from_domain(created)
+    return to_document_response_from_domain(created)
 
 
 @router.get("", response_model=list[DocumentResponse], status_code=status.HTTP_200_OK)
@@ -47,4 +49,4 @@ def search_documents(
         limit=limit,
     )
     documents = handler.execute(query)
-    return [DocumentResponse.from_read_model(item) for item in documents]
+    return [to_document_response_from_read_model(item) for item in documents]
