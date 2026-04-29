@@ -17,7 +17,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS unaccent")
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
 
     op.create_table(
@@ -42,7 +41,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_documentos_search_vector",
         "documentos",
-        [sa.text("to_tsvector('portuguese', unaccent(coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, '')))")],
+        [sa.text("to_tsvector('portuguese', coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, ''))")],
         postgresql_using="gin",
     )
 

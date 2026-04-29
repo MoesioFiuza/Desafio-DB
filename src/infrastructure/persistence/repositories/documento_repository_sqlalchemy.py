@@ -35,14 +35,14 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
             WITH docs AS (
               SELECT
                 id, titulo, autor, conteudo, data, latitude, longitude,
-                to_tsvector('portuguese', unaccent(coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, ''))) AS document_vector
+                to_tsvector('portuguese', coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, '')) AS document_vector
               FROM documentos
             )
             SELECT
               id, titulo, autor, conteudo, data, latitude, longitude,
-              ts_rank(document_vector, {tsquery_function}('portuguese', unaccent(:term))) AS score
+              ts_rank(document_vector, {tsquery_function}('portuguese', :term)) AS score
             FROM docs
-            WHERE document_vector @@ {tsquery_function}('portuguese', unaccent(:term))
+            WHERE document_vector @@ {tsquery_function}('portuguese', :term)
             ORDER BY score DESC, data DESC
             LIMIT :limit
             """
