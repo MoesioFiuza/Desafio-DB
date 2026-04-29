@@ -90,7 +90,7 @@ python -m alembic upgrade head
 ### 5) Subir API
 
 ```powershell
-uvicorn src.main:app --reload
+uvicorn src.main:app --reload --no-server-header
 ```
 
 - Swagger: `http://127.0.0.1:8000/docs`
