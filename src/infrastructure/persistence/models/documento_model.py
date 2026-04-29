@@ -1,6 +1,5 @@
 from datetime import date
 from uuid import UUID, uuid4
-
 from sqlalchemy import CheckConstraint, Date, Float, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 

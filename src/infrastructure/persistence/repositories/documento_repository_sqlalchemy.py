@@ -1,11 +1,10 @@
 from datetime import date
 from uuid import UUID
-
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
 from src.application.contracts.repositories.documento_repository import DocumentoRepository
 from src.domain.entities.documento import Documento
+from src.domain.exceptions.domain_errors import DomainValidationError
 from src.domain.value_objects.coordenada import Coordenada
 from src.domain.value_objects.documento_id import DocumentoId
 from src.domain.value_objects.termo_busca import TermoBusca
@@ -24,40 +23,72 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
             autor=documento.autor,
             conteudo=documento.conteudo,
             data=documento.data,
-            latitude=documento.coordenada.latitude if documento.coordenada else None,
-            longitude=documento.coordenada.longitude if documento.coordenada else None,
+            latitude=documento.coordenada.latitude,
+            longitude=documento.coordenada.longitude,
         )
         self._session.add(model)
 
-    def search_by_term(self, termo: TermoBusca, mode: SearchMode, limit: int = 100) -> list[Documento]:
+    def search_by_term(
+        self,
+        termo: TermoBusca,
+        mode: SearchMode,
+        limit: int = 100,
+        offset: int = 0,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> list[tuple[Documento, float]]:
         tsquery_function = "plainto_tsquery" if mode == SearchMode.TOKEN else "phraseto_tsquery"
         safe_limit = max(1, min(limit, 500))
-        statement = text(
-            f"""
-            WITH docs AS (
-              SELECT
-                id, titulo, autor, conteudo, data, latitude, longitude,
-                to_tsvector('portuguese', unaccent(coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, ''))) AS document_vector
-              FROM documentos
+        safe_offset = max(0, min(offset, 1_000_000))
+        use_geo = latitude is not None and longitude is not None
+
+        if use_geo:
+            statement = text(
+                f"""
+                SELECT
+                  id, titulo, autor, conteudo, data, latitude, longitude,
+                  ts_rank(search_vector, {tsquery_function}('portuguese', :term)) AS score,
+                  (location <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography) AS dist_m
+                FROM documentos
+                WHERE search_vector @@ {tsquery_function}('portuguese', :term)
+                ORDER BY dist_m ASC NULLS LAST, score DESC, data DESC
+                LIMIT :limit OFFSET :offset
+                """
             )
-            SELECT
-              id, titulo, autor, conteudo, data, latitude, longitude,
-              ts_rank(document_vector, {tsquery_function}('portuguese', unaccent(:term))) AS score
-            FROM docs
-            WHERE document_vector @@ {tsquery_function}('portuguese', unaccent(:term))
-            ORDER BY score DESC, data DESC
-            LIMIT :limit
-            """
-        )
-        result = self._session.execute(statement, {"term": termo.value, "limit": safe_limit})
+            result = self._session.execute(
+                statement,
+                {
+                    "term": termo.value,
+                    "limit": safe_limit,
+                    "offset": safe_offset,
+                    "lat": latitude,
+                    "lon": longitude,
+                },
+            )
+        else:
+            statement = text(
+                f"""
+                SELECT
+                  id, titulo, autor, conteudo, data, latitude, longitude,
+                  ts_rank(search_vector, {tsquery_function}('portuguese', :term)) AS score
+                FROM documentos
+                WHERE search_vector @@ {tsquery_function}('portuguese', :term)
+                ORDER BY score DESC, data DESC
+                LIMIT :limit OFFSET :offset
+                """
+            )
+            result = self._session.execute(
+                statement,
+                {"term": termo.value, "limit": safe_limit, "offset": safe_offset},
+            )
         rows = result.mappings().all()
-        return [self._to_domain_row(row) for row in rows]
+        return [(self._to_domain_row(row), float(row["score"])) for row in rows]
 
     @staticmethod
     def _to_domain(model: DocumentoModel) -> Documento:
-        coordenada = None
-        if model.latitude is not None and model.longitude is not None:
-            coordenada = Coordenada(latitude=model.latitude, longitude=model.longitude)
+        if model.latitude is None or model.longitude is None:
+            raise DomainValidationError("Documento persistido sem coordenadas validas.")
+        coordenada = Coordenada(latitude=model.latitude, longitude=model.longitude)
 
         return Documento(
             id=DocumentoId(value=model.id),

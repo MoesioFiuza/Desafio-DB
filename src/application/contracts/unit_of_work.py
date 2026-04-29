@@ -1,5 +1,4 @@
 from typing import Protocol
-
 from src.application.contracts.repositories.documento_repository import DocumentoRepository
 
 

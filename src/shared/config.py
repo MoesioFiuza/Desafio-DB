@@ -1,5 +1,4 @@
 from functools import lru_cache
-
 from pydantic import Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,6 +21,8 @@ class Settings(BaseSettings):
     cors_allowed_origins: list[str] = Field(default_factory=lambda: ["*"])
     max_request_size_bytes: int = 1_048_576
     rate_limit_requests_per_minute: int = 120
+
+    skip_database_ready: bool = False
 
     @field_validator("database_url")
     @classmethod

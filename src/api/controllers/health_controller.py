@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response, status
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
-
 from src.infrastructure.persistence.db_context import check_database_health
 
 router = APIRouter()

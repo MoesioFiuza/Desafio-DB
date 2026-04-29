@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import date
-
 from src.domain.exceptions.domain_errors import DomainValidationError
 from src.domain.value_objects.coordenada import Coordenada
 from src.domain.value_objects.documento_id import DocumentoId
@@ -13,7 +12,7 @@ class Documento:
     autor: str
     conteudo: str
     data: date
-    coordenada: Coordenada | None = None
+    coordenada: Coordenada
 
     def __post_init__(self) -> None:
         self.titulo = self.titulo.strip()

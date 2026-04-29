@@ -10,9 +10,7 @@ class CreateDocumentHandler:
         self._unit_of_work = unit_of_work
 
     def execute(self, command: CreateDocumentCommand) -> Documento:
-        coordenada: Coordenada | None = None
-        if command.latitude is not None and command.longitude is not None:
-            coordenada = Coordenada(latitude=command.latitude, longitude=command.longitude)
+        coordenada = Coordenada(latitude=command.latitude, longitude=command.longitude)
 
         documento = Documento(
             id=DocumentoId.new(),

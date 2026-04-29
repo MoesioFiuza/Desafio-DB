@@ -8,3 +8,5 @@ class SearchDocumentsQuery:
     latitude: float | None = None
     longitude: float | None = None
     limit: int = 100
+    offset: int = 0
+    conteudo_preview_max: int | None = None

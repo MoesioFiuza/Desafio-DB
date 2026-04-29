@@ -1,5 +1,4 @@
 import logging
-
 from src.shared.request_context import request_id_ctx
 
 
