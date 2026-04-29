@@ -79,7 +79,7 @@ Crie `.env` na raiz (exemplo):
 DATABASE_URL=postgresql+psycopg://postgres:895623@localhost:5432/documentos
 ENVIRONMENT=development
 ```
-Tem um env de exemplo, caso quero usá-lo, só o renomeie para *.env*
+Tem um env de exemplo, caso queira usá-lo, só o renomeie para *.env*
 
 ### 4) Migrações
 
