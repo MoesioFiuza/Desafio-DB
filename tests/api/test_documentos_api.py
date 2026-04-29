@@ -14,7 +14,7 @@ def test_post_documento_201_envelope(client: TestClient) -> None:
     assert res.status_code == 201
     body = res.json()
     assert body["success"] is True
-    assert body["message"]
+    assert body["message"] == "Documento criado com sucesso."
     assert body["trace_id"]
     assert body["data"]["titulo"] == "Doc API"
     assert body["data"]["latitude"] == -30.0
@@ -35,6 +35,7 @@ def test_get_palavra_chave_returns_match(client: TestClient) -> None:
     )
     r = client.get("/documentos", params={"palavraChave": "informacao"})
     assert r.status_code == 200
+    assert r.json()["message"] == "Foi encontrado 1 documento."
     data = r.json()["data"]
     assert len(data) == 1
     assert data[0]["score"] is not None
@@ -60,6 +61,15 @@ def test_get_neither_search_params_400(client: TestClient) -> None:
     assert body["trace_id"]
 
 
+def test_get_busca_sem_resultados_mensagem_amigavel(client: TestClient) -> None:
+    r = client.get("/documentos", params={"palavraChave": "xyz_token_inexistente_123"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["success"] is True
+    assert body["data"] == []
+    assert body["message"] == "Nenhum documento foi encontrado com os filtros informados."
+
+
 def test_get_offset_and_limit(client: TestClient) -> None:
     for i in range(3):
         client.post(
@@ -78,10 +88,12 @@ def test_get_offset_and_limit(client: TestClient) -> None:
         params={"palavraChave": "teste", "limit": 2, "offset": 0},
     )
     assert first_page.status_code == 200
+    assert first_page.json()["message"] == "Foram encontrados 2 documentos."
     first_ids = [item["id"] for item in first_page.json()["data"]]
 
     r = client.get("/documentos", params={"palavraChave": "teste", "limit": 2, "offset": 1})
     assert r.status_code == 200
+    assert r.json()["message"] == "Foram encontrados 2 documentos."
     second_page = r.json()["data"]
     assert len(second_page) == 2
     second_ids = [item["id"] for item in second_page]
@@ -122,3 +134,7 @@ def test_validation_extra_field_forbidden(client: TestClient) -> None:
         },
     )
     assert res.status_code == 422
+    body = res.json()
+    assert body["success"] is False
+    assert body["code"] == "request_validation_error"
+    assert "não é permitido" in body["message"]

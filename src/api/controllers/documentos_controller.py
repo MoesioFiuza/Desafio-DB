@@ -75,9 +75,16 @@ def search_documents(
     )
     with DOCUMENT_SEARCH_DURATION.time():
         documents = handler.execute(query)
+    rows = [to_document_response_from_read_model(item) for item in documents]
+    if not rows:
+        search_message = "Nenhum documento foi encontrado com os filtros informados."
+    elif len(rows) == 1:
+        search_message = "Foi encontrado 1 documento."
+    else:
+        search_message = f"Foram encontrados {len(rows)} documentos."
     return DocumentSearchSuccessResponse(
         success=True,
-        message="Busca realizada com sucesso.",
-        data=[to_document_response_from_read_model(item) for item in documents],
+        message=search_message,
+        data=rows,
         trace_id=request_id_ctx.get(),
     )

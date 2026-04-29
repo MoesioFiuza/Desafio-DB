@@ -9,7 +9,7 @@ class TermoBusca:
     def __post_init__(self) -> None:
         termo = self.value.strip()
         if not termo:
-            raise DomainValidationError("O termo de busca nao pode ser vazio.")
+            raise DomainValidationError("O termo de busca não pode ser vazio.")
         if len(termo) > 200:
-            raise DomainValidationError("O termo de busca deve ter no maximo 200 caracteres.")
+            raise DomainValidationError("O termo de busca deve ter no máximo 200 caracteres.")
         object.__setattr__(self, "value", termo)
