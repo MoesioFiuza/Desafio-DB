@@ -15,6 +15,7 @@ from src.application.use_cases.create_document.command import CreateDocumentComm
 from src.application.use_cases.create_document.handler import CreateDocumentHandler
 from src.application.use_cases.search_documents.handler import SearchDocumentsHandler
 from src.application.use_cases.search_documents.query import SearchDocumentsQuery
+from src.infrastructure.observability.metrics import DOCUMENT_SEARCH_DURATION
 from src.shared.request_context import request_id_ctx
 
 router = APIRouter()
@@ -59,6 +60,8 @@ def search_documents(
     latitude: Annotated[float | None, Query(ge=-90.0, le=90.0)] = None,
     longitude: Annotated[float | None, Query(ge=-180.0, le=180.0)] = None,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0, le=1_000_000)] = 0,
+    conteudo_preview: Annotated[int | None, Query(alias="conteudoPreview", ge=1, le=50_000)] = None,
     handler: SearchDocumentsHandler = Depends(get_search_documents_handler),
 ) -> DocumentSearchSuccessResponse:
     query = SearchDocumentsQuery(
@@ -67,8 +70,11 @@ def search_documents(
         latitude=latitude,
         longitude=longitude,
         limit=limit,
+        offset=offset,
+        conteudo_preview_max=conteudo_preview,
     )
-    documents = handler.execute(query)
+    with DOCUMENT_SEARCH_DURATION.time():
+        documents = handler.execute(query)
     return DocumentSearchSuccessResponse(
         success=True,
         message="Busca realizada com sucesso.",

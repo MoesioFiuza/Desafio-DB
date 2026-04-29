@@ -14,5 +14,8 @@ class DocumentoRepository(Protocol):
         termo: TermoBusca,
         mode: SearchMode,
         limit: int = 100,
+        offset: int = 0,
+        latitude: float | None = None,
+        longitude: float | None = None,
     ) -> list[tuple[Documento, float]]:
         ...

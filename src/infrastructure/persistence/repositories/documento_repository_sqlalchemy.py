@@ -28,27 +28,59 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
         )
         self._session.add(model)
 
-    def search_by_term(self, termo: TermoBusca, mode: SearchMode, limit: int = 100) -> list[tuple[Documento, float]]:
+    def search_by_term(
+        self,
+        termo: TermoBusca,
+        mode: SearchMode,
+        limit: int = 100,
+        offset: int = 0,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> list[tuple[Documento, float]]:
         tsquery_function = "plainto_tsquery" if mode == SearchMode.TOKEN else "phraseto_tsquery"
         safe_limit = max(1, min(limit, 500))
-        statement = text(
-            f"""
-            WITH docs AS (
-              SELECT
-                id, titulo, autor, conteudo, data, latitude, longitude,
-                to_tsvector('portuguese', coalesce(titulo, '') || ' ' || coalesce(conteudo, '') || ' ' || coalesce(autor, '')) AS document_vector
-              FROM documentos
+        safe_offset = max(0, min(offset, 1_000_000))
+        use_geo = latitude is not None and longitude is not None
+
+        if use_geo:
+            statement = text(
+                f"""
+                SELECT
+                  id, titulo, autor, conteudo, data, latitude, longitude,
+                  ts_rank(search_vector, {tsquery_function}('portuguese', :term)) AS score,
+                  (location <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography) AS dist_m
+                FROM documentos
+                WHERE search_vector @@ {tsquery_function}('portuguese', :term)
+                ORDER BY dist_m ASC NULLS LAST, score DESC, data DESC
+                LIMIT :limit OFFSET :offset
+                """
             )
-            SELECT
-              id, titulo, autor, conteudo, data, latitude, longitude,
-              ts_rank(document_vector, {tsquery_function}('portuguese', :term)) AS score
-            FROM docs
-            WHERE document_vector @@ {tsquery_function}('portuguese', :term)
-            ORDER BY score DESC, data DESC
-            LIMIT :limit
-            """
-        )
-        result = self._session.execute(statement, {"term": termo.value, "limit": safe_limit})
+            result = self._session.execute(
+                statement,
+                {
+                    "term": termo.value,
+                    "limit": safe_limit,
+                    "offset": safe_offset,
+                    "lat": latitude,
+                    "lon": longitude,
+                },
+            )
+        else:
+            statement = text(
+                f"""
+                SELECT
+                  id, titulo, autor, conteudo, data, latitude, longitude,
+                  ts_rank(search_vector, {tsquery_function}('portuguese', :term)) AS score
+                FROM documentos
+                WHERE search_vector @@ {tsquery_function}('portuguese', :term)
+                ORDER BY score DESC, data DESC
+                LIMIT :limit OFFSET :offset
+                """
+            )
+            result = self._session.execute(
+                statement,
+                {"term": termo.value, "limit": safe_limit, "offset": safe_offset},
+            )
         rows = result.mappings().all()
         return [(self._to_domain_row(row), float(row["score"])) for row in rows]
 
