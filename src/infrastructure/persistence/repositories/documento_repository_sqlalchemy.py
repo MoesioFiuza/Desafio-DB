@@ -4,6 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.application.contracts.repositories.documento_repository import DocumentoRepository
 from src.domain.entities.documento import Documento
+from src.domain.exceptions.domain_errors import DomainValidationError
 from src.domain.value_objects.coordenada import Coordenada
 from src.domain.value_objects.documento_id import DocumentoId
 from src.domain.value_objects.termo_busca import TermoBusca
@@ -27,7 +28,7 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
         )
         self._session.add(model)
 
-    def search_by_term(self, termo: TermoBusca, mode: SearchMode, limit: int = 100) -> list[Documento]:
+    def search_by_term(self, termo: TermoBusca, mode: SearchMode, limit: int = 100) -> list[tuple[Documento, float]]:
         tsquery_function = "plainto_tsquery" if mode == SearchMode.TOKEN else "phraseto_tsquery"
         safe_limit = max(1, min(limit, 500))
         statement = text(
@@ -49,13 +50,13 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
         )
         result = self._session.execute(statement, {"term": termo.value, "limit": safe_limit})
         rows = result.mappings().all()
-        return [self._to_domain_row(row) for row in rows]
+        return [(self._to_domain_row(row), float(row["score"])) for row in rows]
 
     @staticmethod
     def _to_domain(model: DocumentoModel) -> Documento:
-        coordenada = None
-        if model.latitude is not None and model.longitude is not None:
-            coordenada = Coordenada(latitude=model.latitude, longitude=model.longitude)
+        if model.latitude is None or model.longitude is None:
+            raise DomainValidationError("Documento persistido sem coordenadas validas.")
+        coordenada = Coordenada(latitude=model.latitude, longitude=model.longitude)
 
         return Documento(
             id=DocumentoId(value=model.id),

@@ -14,5 +14,5 @@ class DocumentoRepository(Protocol):
         termo: TermoBusca,
         mode: SearchMode,
         limit: int = 100,
-    ) -> list[Documento]:
+    ) -> list[tuple[Documento, float]]:
         ...

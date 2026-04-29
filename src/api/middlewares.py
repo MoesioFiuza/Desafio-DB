@@ -48,10 +48,10 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
-        response.headers["Content-Type-Options"] = "nosniff"
-        response.headers["Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Protection"] = "1; mode=block"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Content-Security-Policy"] = "default-src 'self'"
         return response
 
@@ -63,15 +63,27 @@ class MaxBodySizeMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > self._max_bytes:
-            return JSONResponse(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                content={
-                    "code": "payload_too_large",
-                    "message": "Payload excede o limite permitido.",
-                    "trace_id": request_id_ctx.get(),
-                },
-            )
+        if content_length:
+            if int(content_length) > self._max_bytes:
+                return JSONResponse(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    content={
+                        "code": "payload_too_large",
+                        "message": "Payload excede o limite permitido.",
+                        "trace_id": request_id_ctx.get(),
+                    },
+                )
+        else:
+            body = await request.body()
+            if len(body) > self._max_bytes:
+                return JSONResponse(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    content={
+                        "code": "payload_too_large",
+                        "message": "Payload excede o limite permitido.",
+                        "trace_id": request_id_ctx.get(),
+                    },
+                )
         return await call_next(request)
 
 

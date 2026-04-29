@@ -21,20 +21,20 @@ class SearchDocumentsHandler:
         raw_term = query.busca if query.busca else query.palavra_chave
 
         termo = TermoBusca(raw_term or "")
-        documentos = self._repository.search_by_term(termo=termo, mode=mode, limit=query.limit)
+        documentos_with_score = self._repository.search_by_term(termo=termo, mode=mode, limit=query.limit)
 
         if query.latitude is None:
-            return [self._to_read_model(documento, score=0.0) for documento in documentos]
+            return [self._to_read_model(documento, score=score) for documento, score in documentos_with_score]
 
         origem = Coordenada(latitude=query.latitude, longitude=query.longitude)
 
-        def sort_key(documento: Documento) -> tuple[float, str]:
-            if documento.coordenada is None:
-                return (float("inf"), str(documento.id.value))
-            return (DistanciaService.haversine_km(origem, documento.coordenada), str(documento.id.value))
+        def sort_key(item: tuple[Documento, float]) -> tuple[float, float, str]:
+            documento, score = item
+            distance_km = DistanciaService.haversine_km(origem, documento.coordenada)
+            return (distance_km, -score, str(documento.id.value))
 
-        ordered = sorted(documentos, key=sort_key)
-        return [self._to_read_model(documento, score=0.0) for documento in ordered]
+        ordered = sorted(documentos_with_score, key=sort_key)
+        return [self._to_read_model(documento, score=score) for documento, score in ordered]
 
     @staticmethod
     def _to_read_model(documento: Documento, score: float) -> DocumentReadModel:
@@ -44,7 +44,7 @@ class SearchDocumentsHandler:
             autor=documento.autor,
             conteudo=documento.conteudo,
             data=documento.data,
-            latitude=documento.coordenada.latitude if documento.coordenada else None,
-            longitude=documento.coordenada.longitude if documento.coordenada else None,
+            latitude=documento.coordenada.latitude,
+            longitude=documento.coordenada.longitude,
             score=score,
         )
