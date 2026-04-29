@@ -22,8 +22,8 @@ class DocumentoRepositorySqlAlchemy(DocumentoRepository):
             autor=documento.autor,
             conteudo=documento.conteudo,
             data=documento.data,
-            latitude=documento.coordenada.latitude if documento.coordenada else None,
-            longitude=documento.coordenada.longitude if documento.coordenada else None,
+            latitude=documento.coordenada.latitude,
+            longitude=documento.coordenada.longitude,
         )
         self._session.add(model)
 

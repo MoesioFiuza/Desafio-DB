@@ -10,8 +10,8 @@ def to_document_response_from_domain(documento: Documento) -> DocumentResponse:
         autor=documento.autor,
         conteudo=documento.conteudo,
         data=documento.data,
-        latitude=documento.coordenada.latitude if documento.coordenada else None,
-        longitude=documento.coordenada.longitude if documento.coordenada else None,
+        latitude=documento.coordenada.latitude,
+        longitude=documento.coordenada.longitude,
         score=None,
     )
 def to_document_response_from_read_model(model: DocumentReadModel) -> DocumentResponse:

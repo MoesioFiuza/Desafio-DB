@@ -8,5 +8,5 @@ class CreateDocumentCommand:
     autor: str
     conteudo: str
     data: date
-    latitude: float | None = None
-    longitude: float | None = None
+    latitude: float
+    longitude: float

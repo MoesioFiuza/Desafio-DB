@@ -12,7 +12,7 @@ class Documento:
     autor: str
     conteudo: str
     data: date
-    coordenada: Coordenada | None = None
+    coordenada: Coordenada
 
     def __post_init__(self) -> None:
         self.titulo = self.titulo.strip()
