@@ -113,7 +113,7 @@ Comando:
 python -m pytest tests -q --cov=src --cov-config=.coveragerc --cov-report=term-missing
 ```
 
-Resultado de referência atual: **38 testes passando, ~83% de cobertura**.
+Resultado de referência atual: **39 testes, ~81% de cobertura**.
 
 ---
 
