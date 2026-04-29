@@ -18,7 +18,8 @@ from src.shared.config import get_settings
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging()
-    ensure_database_ready()
+    if not settings.skip_database_ready:
+        ensure_database_ready()
 
     app = FastAPI(
         title=settings.app_name,
