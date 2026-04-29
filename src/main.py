@@ -25,7 +25,6 @@ def create_app() -> FastAPI:
         version=settings.api_version,
         description="Microsservico para cadastro e busca de documentos por termo.",
     )
-    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MaxBodySizeMiddleware, max_bytes=settings.max_request_size_bytes)
@@ -37,6 +36,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestContextMiddleware)
     register_exception_handlers(app)
     app.include_router(documentos_router, prefix="/documentos", tags=["Documentos"])
     app.include_router(health_router, tags=["Infra"])

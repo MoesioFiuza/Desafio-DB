@@ -16,7 +16,7 @@ logger = logging.getLogger("api.request")
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        request_id = request.headers.get("request-id", str(uuid.uuid4()))
+        request_id = request.headers.get("request-id") or str(uuid.uuid4())
         token = request_id_ctx.set(request_id)
         request.state.request_id = request_id
         try:
@@ -32,13 +32,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start = time.perf_counter()
         response = await call_next(request)
         elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+        trace_id = getattr(request.state, "request_id", request_id_ctx.get())
         payload = {
             "event": "http_request",
             "method": request.method,
             "path": request.url.path,
             "status_code": response.status_code,
             "elapsed_ms": elapsed_ms,
-            "trace_id": request_id_ctx.get(),
+            "trace_id": trace_id,
         }
         logger.info(json.dumps(payload, ensure_ascii=True))
         return response
@@ -56,7 +57,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class MaxBodySizeMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, max_bytes: int) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, app, max_bytes: int) -> None:
         super().__init__(app)
         self._max_bytes = max_bytes
 
