@@ -7,7 +7,7 @@ As grandes instituições entendem os dados com um bem extremamente valioso, pel
 **Seu objetivo é construir um microsserviço que seja capaz de encontrar as informações adequadas, dado uma palavra-chave.**
 
 ## Especificação
-
+    
 - Seu microsserviço deve ser construído em **Python** 3.x, e deve seguir os padrões **REST** com **HTTP**.
 - **O framework para construir a API é de livre escolha.**
 - Dois endpoints devem ser desenvolvidos, conforme descrito abaixo.
