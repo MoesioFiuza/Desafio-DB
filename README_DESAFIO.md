@@ -1,5 +1,5 @@
 
-## Resumo
+## Resumo da implementação aplicado ao Desafio
 
 Microsserviço REST em Python com FastAPI para cadastro e busca de documentos, com:
 
@@ -28,20 +28,17 @@ Microsserviço REST em Python com FastAPI para cadastro e busca de documentos, c
 A implementação segue um estilo **DDD + ports/adapters**:
 
 - `src/domain`: entidade, objetos de valor, serviços de domínio e exceções de negócio;
-- `src/application`: casos de uso, comandos/queries e contratos (`Repository`, `UnitOfWork`);
+- `src/application`: casos de uso, comandos/queries e contratos;
 - `src/infrastructure`: SQLAlchemy, migrações, banco e observabilidade;
 - `src/api`: endpoints, DTOs, middlewares, mapeamentos e error handlers.
 
 ### Por que DDD neste contexto
 
-Como o cliente é a **Sicredi** (setor financeiro), foquei em uma estrutura que deixa regra clara e reduz risco de comportamento inesperado ao evoluir.
+- regra de negócio isolada de framework e SQL;
+- invariantes explícitas no domínio;
+- testes rápidos com fakes sem subir banco para o fluxo principal;
+- menor risco de regressão quando a API evoluir.
 
-Os motivos principais da escolha:
-
-- separar regra de negócio de framework e SQL;
-- deixar invariantes do problema explícitas (ex.: `palavraChave` XOR `busca`, validação de coordenadas, limite de termo);
-- facilitar testes de regra sem depender de Postgres em cada execução;
-- manter o projeto legível para evolução futura (novas regras, novos filtros, outro repositório).
 
 ### Arquiteturas consideradas (e por que não escolhi)
 
