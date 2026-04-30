@@ -76,10 +76,12 @@ pip install -r requirements-dev.txt
 Crie `.env` na raiz (exemplo):
 
 ```env
-DATABASE_URL=postgresql+psycopg://postgres:895623@localhost:5432/documentos
+DATABASE_URL=postgresql+psycopg://<usuario>:<senha>@localhost:5432/documentos
 ENVIRONMENT=development
+CORS_ALLOWED_ORIGINS=["http://localhost:3000"]
+RATE_LIMIT_BACKEND=inmemory
+SKIP_DATABASE_READY=false
 ```
-Tem um env de exemplo, caso queira usá-lo, só o renomeie para *.env*
 
 ### 4) Migrações
 
