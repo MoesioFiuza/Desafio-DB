@@ -1,5 +1,6 @@
 from collections.abc import Generator
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 from src.shared.config import get_settings
 
@@ -38,5 +39,5 @@ def check_database_health() -> bool:
             connection.execute(text("SELECT 1"))
             connection.commit()
         return True
-    except Exception:
+    except SQLAlchemyError:
         return False

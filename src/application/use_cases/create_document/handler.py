@@ -1,8 +1,13 @@
+import logging
+
+from sqlalchemy.exc import SQLAlchemyError
 from src.application.contracts.unit_of_work import UnitOfWork
 from src.application.use_cases.create_document.command import CreateDocumentCommand
 from src.domain.entities.documento import Documento
 from src.domain.value_objects.coordenada import Coordenada
 from src.domain.value_objects.documento_id import DocumentoId
+
+logger = logging.getLogger(__name__)
 
 
 class CreateDocumentHandler:
@@ -23,7 +28,16 @@ class CreateDocumentHandler:
         try:
             self._unit_of_work.documentos.add(documento)
             self._unit_of_work.commit()
-        except Exception:
+        except (SQLAlchemyError, OSError) as exc:
             self._unit_of_work.rollback()
+            logger.exception(
+                "Falha ao persistir documento",
+                extra={
+                    "event": "create_document_persistence_error",
+                    "titulo": command.titulo,
+                    "autor": command.autor,
+                    "error_type": type(exc).__name__,
+                },
+            )
             raise
         return documento

@@ -29,7 +29,8 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(MaxBodySizeMiddleware, max_bytes=settings.max_request_size_bytes)
-    app.add_middleware(InMemoryRateLimitMiddleware, settings=settings)
+    if settings.rate_limit_backend == "inmemory":
+        app.add_middleware(InMemoryRateLimitMiddleware, settings=settings)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_allowed_origins,

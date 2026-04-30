@@ -1,5 +1,5 @@
 from functools import lru_cache
-from pydantic import Field, ValidationError, field_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,16 +11,18 @@ class Settings(BaseSettings):
     api_version: str = "1.0.0"
 
     database_url: str = Field(
-        default="postgresql+psycopg://postgres:postgres@localhost:5432/documentos",
+        ...,
+        description="URL de conexão com o PostgreSQL.",
     )
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_timeout_seconds: int = 30
     database_pool_recycle_seconds: int = 1800
 
-    cors_allowed_origins: list[str] = Field(default_factory=lambda: ["*"])
+    cors_allowed_origins: list[str] = Field(default_factory=list)
     max_request_size_bytes: int = 1_048_576
     rate_limit_requests_per_minute: int = 120
+    rate_limit_backend: str = Field(default="inmemory", pattern="^(inmemory|distributed)$")
 
     skip_database_ready: bool = False
 
@@ -30,6 +32,22 @@ class Settings(BaseSettings):
         if not value.startswith(("postgresql://", "postgresql+psycopg://")):
             raise ValueError("DATABASE_URL deve apontar para PostgreSQL.")
         return value
+
+    @model_validator(mode="after")
+    def validate_runtime_safety_guards(self) -> "Settings":
+        if self.environment == "production":
+            if self.skip_database_ready:
+                raise ValueError("SKIP_DATABASE_READY nao pode ser true em production.")
+            if not self.cors_allowed_origins:
+                raise ValueError("CORS_ALLOWED_ORIGINS deve ser definido em production.")
+            if "*" in self.cors_allowed_origins:
+                raise ValueError("CORS_ALLOWED_ORIGINS nao pode conter '*' em production.")
+            if self.rate_limit_backend == "inmemory":
+                raise ValueError(
+                    "RATE_LIMIT_BACKEND=inmemory nao e permitido em production. "
+                    "Use backend distribuido (ex.: Redis/API Gateway)."
+                )
+        return self
 
 
 @lru_cache(maxsize=1)
